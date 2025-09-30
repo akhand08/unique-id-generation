@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sync"
 )
 
 type Node struct {
+	msg_counter int64
 }
 
 func CreateNode() *Node {
@@ -19,6 +21,7 @@ func (n *Node) Run() {
 
 	reader := bufio.NewReader(os.Stdin)
 	decoder := json.NewDecoder(reader)
+	var wg sync.WaitGroup
 
 	fmt.Fprintln(os.Stderr, "Server is started to running")
 
@@ -26,13 +29,8 @@ func (n *Node) Run() {
 
 		var request Request
 		err := decoder.Decode(&request)
-
-		if request.Body.Type == "init" {
-			initBody := InitResponseBody{Type: "init_ok", InReplyTo: request.Body.MessageID}
-			initResponse := InitResponse{Source: request.Destination, Destination: request.Source, Body: initBody}
-
-			json.NewEncoder(os.Stdout).Encode(initResponse)
-		}
+		wg.Add(1)
+		go request.RequestHandler(n, &wg)
 
 		if err == io.EOF {
 			break
@@ -44,4 +42,6 @@ func (n *Node) Run() {
 		}
 
 	}
+
+	wg.Wait()
 }

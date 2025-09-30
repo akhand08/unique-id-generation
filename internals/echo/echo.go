@@ -8,7 +8,7 @@ type ResponseBody struct {
 }
 
 type Response struct {
-	Source      string `json:"src"`
-	Destination string `json:"dest"`
-	Body        ResponseBody
+	Source      string       `json:"src"`
+	Destination string       `json:"dest"`
+	Body        ResponseBody `json:"body"`
 }
